@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager · Observability Demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Task Manager</h1>
+      <p class="sub">Frontend for the fully-instrumented FastAPI + Postgres backend.</p>
+    </header>
+
+    <section class="card">
+      <form id="task-form">
+        <input id="title" type="text" placeholder="Task title" required maxlength="200" />
+        <input id="description" type="text" placeholder="Description (optional)" />
+        <button type="submit">Add task</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="row-header">
+        <h2>Tasks</h2>
+        <button id="refresh-btn" class="ghost">Refresh</button>
+      </div>
+      <ul id="task-list"></ul>
+      <p id="empty-state" class="muted" hidden>No tasks yet — add one above.</p>
+    </section>
+
+    <section class="card debug">
+      <h2>Incident simulation (dev only)</h2>
+      <p class="muted">Hits the backend's /debug endpoints — useful for testing your alert rules and runbooks.</p>
+      <div class="debug-actions">
+        <button data-debug="slow">Trigger slow request (3s)</button>
+        <button data-debug="error">Trigger 500 error</button>
+        <button data-debug="cpu">Trigger CPU spike (2s)</button>
+      </div>
+      <p id="debug-status" class="muted"></p>
+    </section>
+
+    <footer>
+      <p id="last-request-id" class="muted"></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

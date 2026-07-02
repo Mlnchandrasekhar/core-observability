@@ -1,0 +1,55 @@
+# Minimal compose for the app itself. It deliberately does NOT include
+# Prometheus/Loki/Tempo/Grafana -- you already run the LGTM stack, so this just
+# needs to be pointed at it via env vars (OTEL_EXPORTER_OTLP_ENDPOINT etc.)
+# and scraped for /metrics + tailed for stdout JSON logs.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+      POSTGRES_DB: taskdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskuser -d taskdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      SERVICE_NAME: taskmanager-api
+      ENVIRONMENT: dev
+      DATABASE_URL: postgresql+asyncpg://taskuser:taskpass@postgres:5432/taskdb
+      LOG_LEVEL: INFO
+      # Point this at your Alloy/OTel-collector or Tempo's OTLP gRPC receiver.
+      # If you're running the LGTM stack on the host machine / another compose
+      # network, replace with its reachable address.
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://host.docker.internal:4317
+      OTEL_TRACES_SAMPLER_RATIO: "1.0"
+      OTEL_ENABLED: "true"
+      CORS_ORIGINS: '["*"]'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
