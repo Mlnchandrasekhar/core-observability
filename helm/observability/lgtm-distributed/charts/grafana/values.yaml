@@ -295,7 +295,7 @@ ingress:
   pathType: Prefix
 
   hosts:
-    - monitor-dev.kfcapital.co.in
+    - monitor.mlopsbychandu.online
   ## Extra paths to prepend to every host configuration. This is useful when working with annotation based services.
   extraPaths: []
   # - path: /*
@@ -315,7 +315,7 @@ ingress:
   tls: 
     - secretName: grafana-tls
       hosts:
-        - monitor-dev.kfcapital.co.in
+        - monitor.mlopsbychandu.online
 
 # -- BETA: Configure the gateway routes for the chart here.
 # More routes can be added by adding a dictionary key like the 'main' route.
