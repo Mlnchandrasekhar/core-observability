@@ -3,7 +3,7 @@
 // the UI so you can copy it and grep for it directly in Loki while testing
 // the metrics -> logs -> traces correlation workflow.
 
-const API_BASE = window.API_BASE || "http://localhost:8000";
+const API_BASE = window.API_BASE || "/backend";
 
 const taskForm = document.getElementById("task-form");
 const titleInput = document.getElementById("title");
