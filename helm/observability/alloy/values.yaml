@@ -89,7 +89,7 @@ alloy:
 
       prometheus.remote_write "mimir" {
         endpoint {
-          url = "http://lgtm-mimir-nginx.monitoring.svc.cluster.local/api/v1/push"
+          url = "http://lgtm-mimir-nginx.core-observe.svc.cluster.local/api/v1/push"
         }
       }
 
@@ -115,7 +115,7 @@ alloy:
 
       loki.write "loki_backend" {
         endpoint {
-          url = "http://lgtm-loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push"
+          url = "http://lgtm-loki-gateway.core-observe.svc.cluster.local/loki/api/v1/push"
         }
       }
 
@@ -133,7 +133,7 @@ alloy:
 
       otelcol.exporter.otlp "tempo_backend" {
         client {
-          endpoint = "lgtm-tempo-distributor.monitoring.svc.cluster.local:4317"
+          endpoint = "lgtm-tempo-distributor.core-observe.svc.cluster.local:4317"
           tls { insecure = true }
         }
       }
