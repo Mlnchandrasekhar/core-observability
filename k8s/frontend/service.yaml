@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: credcheck-frontend-service
+  name: core-frontend-service
   labels:
-    app: credcheck-frontend
+    app: core-frontend
     environment: dev
 spec:
   trafficDistribution: PreferSameZone
   selector:
-    app: credcheck-frontend
+    app: core-frontend
   ports:
     - protocol: TCP
       port: 80
