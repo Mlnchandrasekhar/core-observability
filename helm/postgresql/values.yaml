@@ -28,7 +28,7 @@ global:
     ## @param global.postgresql.auth.secretKeys.replicationPasswordKey Name of key in existing secret to use for PostgreSQL credentials (overrides `auth.secretKeys.replicationPasswordKey`). Only used when `global.postgresql.auth.existingSecret` is set.
     ##
     auth:
-      postgresPassword: ""
+      postgresPassword: "Chandra@123"
       username: ""
       password: ""
       database: ""
@@ -581,7 +581,11 @@ primary:
   ## @param primary.tolerations Tolerations for PostgreSQL primary pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations: []
+  tolerations: 
+  - key: "oss"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
   ## @param primary.topologySpreadConstraints Topology Spread Constraints for pod assignment spread across your cluster among failure-domains. Evaluated as a template
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#spread-constraints-for-pods
   ##
@@ -1035,7 +1039,11 @@ readReplicas:
   ## @param readReplicas.tolerations Tolerations for PostgreSQL read only pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
-  tolerations: []
+  tolerations: 
+  - key: "oss"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
   ## @param readReplicas.topologySpreadConstraints Topology Spread Constraints for pod assignment spread across your cluster among failure-domains. Evaluated as a template
   ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/#spread-constraints-for-pods
   ##
@@ -1354,7 +1362,11 @@ backup:
     ## @param backup.cronjob.tolerations Tolerations for PostgreSQL backup CronJob pods assignment
     ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
     ##
-    tolerations: []
+    tolerations: 
+    - key: "oss"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
     ## backup cronjob container resource requests and limits
     ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
     ## @param backup.cronjob.resourcesPreset Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if backup.cronjob.resources is set (backup.cronjob.resources is recommended for production).

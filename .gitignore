@@ -1,1 +1,3 @@
 .env
+argocd-repo-key
+argocd-repo-key.pub
