@@ -42,7 +42,7 @@ spec:
         - name: core-frontend
           image: asia-south1-docker.pkg.dev/kfcpl-dev/custom/frontend-amd:v1
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           resources:
             requests:
               memory: "100Mi"
