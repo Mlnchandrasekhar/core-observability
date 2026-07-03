@@ -848,7 +848,7 @@ dashboards:
   #     json: |
   #       $RAW_JSON
       k8s-dashboard:
-        file: dashboards/k8s-dashboard.json
+        file: helm/observability/lgtm-distributed/charts/grafana/dashboards/k8s-dashboard.json
   #   prometheus-stats:
   #     gnetId: 2
   #     revision: 2
