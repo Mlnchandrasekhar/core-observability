@@ -842,13 +842,13 @@ defaultCurlOptions: "-skf"
 ##
 ## dashboards per provider, use provider name as key.
 ##
-dashboards: {}
-  # default:
+dashboards: 
+    default:    
   #   some-dashboard:
   #     json: |
   #       $RAW_JSON
-  #   custom-dashboard:
-  #     file: dashboards/custom-dashboard.json
+      k8s-dashboard:
+        file: dashboards/k8s-dashboard.json
   #   prometheus-stats:
   #     gnetId: 2
   #     revision: 2
