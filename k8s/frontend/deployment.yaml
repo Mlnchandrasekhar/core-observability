@@ -40,7 +40,7 @@ spec:
           effect: "NoSchedule"
       containers:
         - name: core-frontend
-          image: asia-south1-docker.pkg.dev/kfcpl-dev/custom/frontend-dev:v1
+          image: asia-south1-docker.pkg.dev/kfcpl-dev/custom/frontend-amd:v1
           ports:
             - containerPort: 3000
           resources:
