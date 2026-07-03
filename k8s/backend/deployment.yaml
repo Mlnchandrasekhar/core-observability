@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core-backend
+  labels:
+    app: core-backend
+    environment: dev
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: core-backend
+  template:
+    metadata:
+      labels:
+        app: core-backend
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: k8s-ng-role
+                    operator: In
+                    values:
+                      - oss
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: core-backend
+                topologyKey: "kubernetes.io/hostname"
+      nodeSelector: {}
+      tolerations:
+        - key: "oss"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      serviceAccountName: core-observe-service-account
+      volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "core-backend-secrets"
+      containers:
+      - name: core-backend
+        image: aasia-south1-docker.pkg.dev/kfcpl-dev/custom/backend:v1
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/app/.env"
+              subPath: .env
+        resources:
+          requests:
+            memory: "100Mi"
+            cpu: "10m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: core-backend

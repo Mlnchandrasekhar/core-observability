@@ -1,0 +1,33 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: core-frontend-ingress
+  labels:
+    app: core-frontend
+    environment: dev
+  annotations:
+    nginx.ingress.kubernetes.io/client-max-body-size: 20m
+    nginx.ingress.kubernetes.io/proxy-body-size: 20m
+    nginx.ingress.kubernetes.io/service-upstream: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "chandra-cloudflare-letsencrypt"
+    kubernetes.io/tls-acme: 'true'
+
+
+spec:
+  ingressClassName: nginx-external # Replace with your ingress class name
+  rules:
+    - host: to-do.mlopsbychandu.online # Replace with your domain
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: core-frontend-service
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - to-do.mlopsbychandu.online # Replace with your domain
+      secretName: core-frontend-dev-tls # The secret name where the TLS certificate is stored
