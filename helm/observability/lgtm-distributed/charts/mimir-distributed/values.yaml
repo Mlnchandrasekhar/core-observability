@@ -1088,7 +1088,7 @@ ingester:
       - ReadWriteOnce
 
     # Ingester data Persistent Volume size
-    size: 2Gi
+    size: 10Gi
 
     # Subdirectory of Ingester data Persistent Volume to mount
     # Useful if the volume's root directory is not empty
