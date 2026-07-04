@@ -29,6 +29,7 @@ async def _pool_metrics_loop():
 async def lifespan(app: FastAPI):
     global _pool_metrics_task
     configure_tracing()
+    instrument_app(app)
     await init_models()
     _pool_metrics_task = asyncio.create_task(_pool_metrics_loop())
     log.info("app_startup", service=settings.SERVICE_NAME, version=settings.SERVICE_VERSION)
@@ -60,7 +61,7 @@ app.include_router(debug.router)
 
 # OTel FastAPI auto-instrumentation: wraps every route with an HTTP server span
 # and handles `traceparent` extraction/injection automatically.
-instrument_app(app)
+
 
 
 @app.get("/metrics")
