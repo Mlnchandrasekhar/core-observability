@@ -348,7 +348,7 @@ ingester:
 # Configuration for the metrics-generator
 metricsGenerator:
   # -- Specifies whether a metrics-generator should be deployed
-  enabled: false
+  enabled: true
   # -- Kind of deployment [StatefulSet/Deployment]
   kind: Deployment
   # -- Annotations for the metrics-generator StatefulSet
@@ -498,7 +498,8 @@ metricsGenerator:
       remote_write_add_org_id_header: true
       # -- A list of remote write endpoints.
       # -- https://prometheus.io/docs/prometheus/latest/configuration/configuration/#remote_write
-      remote_write: []
+      remote_write: 
+        - url: http://lgtm-mimir-nginx.core-observe.svc.cluster.local/api/v1/push
     # -- Used by the local blocks processor to store a wal for traces.
     traces_storage:
       path: /var/tempo/traces
@@ -513,7 +514,12 @@ metricsGenerator:
   appProtocol:
     # -- Set the optional grpc service protocol. Ex: "grpc", "http2" or "https"
     grpc: null
-
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - service-graphs
+        - span-metrics
 # Configuration for the distributor
 distributor:
   # -- Number of replicas for the distributor
