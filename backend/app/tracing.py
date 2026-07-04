@@ -1,35 +1,43 @@
 """
 OpenTelemetry setup: auto-instrumentation + manual spans, exported to Tempo.
-
-- Auto-instrumentation: FastAPI (HTTP server spans) + SQLAlchemy (DB client spans)
-  via OTel's instrumentor packages -- zero code changes needed in routers for these.
-- Manual spans: use `tracer.start_as_current_span(...)` in business logic where a
-  span boundary isn't implied by a library call (see routers/tasks.py).
-- Context propagation: OTel's FastAPI instrumentation automatically reads/writes
-  the W3C `traceparent` header on incoming/outgoing requests, so if this service
-  calls another instrumented service, the trace continues unbroken.
 """
+
+import logging
+
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.instrumentation.asyncpg import AsyncPGInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 from opentelemetry.sdk.trace.sampling import ParentBased, TraceIdRatioBased
 
 from app.config import settings
+
+logging.basicConfig(level=logging.DEBUG)
 
 _tracer_provider: TracerProvider | None = None
 
 
 def configure_tracing() -> None:
-    """Call once at startup, before the app starts serving traffic."""
+    """
+    Call once at startup before serving traffic.
+    """
     global _tracer_provider
 
     if not settings.OTEL_ENABLED:
+        print("OTEL disabled")
         return
+
+    print("=== CONFIGURING OPENTELEMETRY ===")
+    print(f"OTLP endpoint: {settings.OTEL_EXPORTER_OTLP_ENDPOINT}")
+    print(f"Service name: {settings.SERVICE_NAME}")
 
     resource = Resource.create(
         {
@@ -39,39 +47,79 @@ def configure_tracing() -> None:
         }
     )
 
-    sampler = ParentBased(TraceIdRatioBased(settings.OTEL_TRACES_SAMPLER_RATIO))
-    _tracer_provider = TracerProvider(resource=resource, sampler=sampler)
+    sampler = ParentBased(
+        TraceIdRatioBased(
+            settings.OTEL_TRACES_SAMPLER_RATIO
+        )
+    )
 
-    exporter = OTLPSpanExporter(endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT, insecure=True)
-    _tracer_provider.add_span_processor(BatchSpanProcessor(exporter))
+    _tracer_provider = TracerProvider(
+        resource=resource,
+        sampler=sampler,
+    )
 
-    trace.set_tracer_provider(_tracer_provider)
+    try:
+        exporter = OTLPSpanExporter(
+            endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT,
+            insecure=True,
+        )
 
-    # Auto-instrument the DB layer. Do this before engine creation isn't required,
-    # but call it once at startup.
-    SQLAlchemyInstrumentor().instrument(tracer_provider=_tracer_provider)
-    AsyncPGInstrumentor().instrument(tracer_provider=_tracer_provider)
+        print("OTLP exporter created successfully")
+
+        # Export to Alloy/Tempo
+        _tracer_provider.add_span_processor(
+            BatchSpanProcessor(exporter)
+        )
+
+        # Print spans to pod logs for debugging
+        _tracer_provider.add_span_processor(
+            SimpleSpanProcessor(
+                ConsoleSpanExporter()
+            )
+        )
+
+        trace.set_tracer_provider(_tracer_provider)
+
+        SQLAlchemyInstrumentor().instrument(
+            tracer_provider=_tracer_provider
+        )
+
+        AsyncPGInstrumentor().instrument(
+            tracer_provider=_tracer_provider
+        )
+
+        print("OpenTelemetry configured successfully")
+
+    except Exception as e:
+        print(f"FAILED TO CONFIGURE OTEL: {e}")
+        raise
 
 
 def instrument_app(app) -> None:
-    """Auto-instrument the FastAPI app itself (HTTP server spans, traceparent
-    propagation). Call after the app object exists, once at startup."""
+    """
+    Instrument FastAPI application.
+    """
     if not settings.OTEL_ENABLED:
         return
-    FastAPIInstrumentor.instrument_app(app, tracer_provider=_tracer_provider)
+
+    print("Instrumenting FastAPI app")
+
+    FastAPIInstrumentor.instrument_app(
+        app,
+        tracer_provider=_tracer_provider,
+    )
+
+    print("FastAPI instrumentation completed")
 
 
 def shutdown_tracing() -> None:
+    global _tracer_provider
+
     if _tracer_provider is not None:
+        print("Flushing traces...")
+        _tracer_provider.force_flush()
         _tracer_provider.shutdown()
 
 
 def get_tracer(name: str = "taskmanager.manual"):
-    """Use this in business logic for manual spans, e.g.:
-
-        tracer = get_tracer(__name__)
-        with tracer.start_as_current_span("validate-task-payload") as span:
-            span.set_attribute("task.title_length", len(title))
-            ...
-    """
     return trace.get_tracer(name)
