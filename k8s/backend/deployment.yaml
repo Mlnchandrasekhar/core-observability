@@ -48,7 +48,7 @@ spec:
             secretProviderClass: "core-backend-secrets"
       containers:
       - name: core-backend
-        image: asia-south1-docker.pkg.dev/kfcpl-dev/custom/backend-amd:v3
+        image: asia-south1-docker.pkg.dev/kfcpl-dev/custom/backend-amd:v4
         ports:
         - containerPort: 8000
         volumeMounts:
